@@ -8,6 +8,13 @@ description = "Enumerate / List / Find / Detect / Search index for opencv VideoC
 authors = [
   { name="Yu He", email="chinaheyu@outlook.com" },
 ]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: C++",
+  "Typing :: Typed"
+]
 readme = "README.md"
 requires-python = ">=3.6"
 license = {file = "LICENSE"}
