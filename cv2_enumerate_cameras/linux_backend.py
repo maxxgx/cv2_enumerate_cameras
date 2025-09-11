@@ -38,7 +38,7 @@ def device_can_capture_video(device_name: str) -> bool:
     else:
         return True  # Device info returns no capabilities listed, assume it supports capture
 
-    for line in lines[search_index:]:
+    for line in lines[search_index + 1 :]:
         if 'Video Capture' in line:
             return True
         elif not line.startswith('\t\t'):
