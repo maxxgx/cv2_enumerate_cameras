@@ -18,15 +18,43 @@ def cameras_generator(apiPreference):
     _VID_RE = re.compile(r"VendorID_(\d+)")
     _PID_RE = re.compile(r"ProductID_(\d+)")
 
-    devs = AVFoundation.AVCaptureDevice.devicesWithMediaType_(
-        AVFoundation.AVMediaTypeVideo
-    )
+    # macOS hardware connection notifications are delivered asynchronously via the NSRunLoop.
+    # Running it once is enough to process pending notifications and update the list.
+    run_loop = AVFoundation.NSRunLoop.currentRunLoop()
+    run_loop.runUntilDate_(AVFoundation.NSDate.dateWithTimeIntervalSinceNow_(0)) # runs loop once
 
-    devs = devs.arrayByAddingObjectsFromArray_(
-        AVFoundation.AVCaptureDevice.devicesWithMediaType_(
-            AVFoundation.AVMediaTypeMuxed
+    # Use AVCaptureDeviceDiscoverySession if available (macOS 10.15+).
+    if hasattr(AVFoundation, "AVCaptureDeviceDiscoverySession"):
+        device_types = [
+            AVFoundation.AVCaptureDeviceTypeBuiltInWideAngleCamera,
+            AVFoundation.AVCaptureDeviceTypeExternalUnknown,
+        ]
+
+        # Explicitly add Continuity Camera if available (macOS 13.0+)
+        if hasattr(AVFoundation, "AVCaptureDeviceTypeContinuityCamera"):
+            device_types.append(AVFoundation.AVCaptureDeviceTypeContinuityCamera)
+
+        # Add Desk View Camera if available (macOS 13.0+)
+        if hasattr(AVFoundation, "AVCaptureDeviceTypeDeskViewCamera"):
+            device_types.append(AVFoundation.AVCaptureDeviceTypeDeskViewCamera)
+
+        device_discovery_session = AVFoundation.AVCaptureDeviceDiscoverySession
+        discovery_session = device_discovery_session.discoverySessionWithDeviceTypes_mediaType_position_(
+            device_types,
+            AVFoundation.AVMediaTypeVideo,
+            AVFoundation.AVCaptureDevicePositionUnspecified,
         )
-    )
+        devs = discovery_session.devices()
+    else:
+        # Fallback for older macOS versions (pre-10.15)
+        devs = AVFoundation.AVCaptureDevice.devicesWithMediaType_(
+            AVFoundation.AVMediaTypeVideo
+        )
+        devs = devs.arrayByAddingObjectsFromArray_(
+            AVFoundation.AVCaptureDevice.devicesWithMediaType_(
+                AVFoundation.AVMediaTypeMuxed
+            )
+        )
 
     devs = list(devs)
 
